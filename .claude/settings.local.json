@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Temp\\\\check-size.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Temp\\\\check-size2.ps1\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Temp\\\\check-size3.ps1\")",
+      "Bash(powershell -Command \"Get-PSDrive D | Format-List Used,Free\")",
+      "Bash(rm -rf \"C:/Users/admin/AppData/Local/MathWorks\" && echo \"Done\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\admin\\AppData\\Local\\MathWorks"
+    ]
+  }
+}

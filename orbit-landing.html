@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORBIT — 自主思考 · 自主行动</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-deep: #08080e;
+  --bg-surface: #111118;
+  --bg-card: #16161f;
+  --text-primary: #e4e2dd;
+  --text-secondary: #8b8896;
+  --text-muted: #5c5a66;
+  --accent-green: #00e67a;
+  --accent-green-dim: rgba(0, 230, 122, 0.12);
+  --accent-amber: #ff8c42;
+  --accent-amber-dim: rgba(255, 140, 66, 0.10);
+  --border: #1e1e2a;
+  --border-active: rgba(0, 230, 122, 0.35);
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Manrope', sans-serif;
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-smooth: 350ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Background atmosphere ── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+.bg-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 35%, rgba(0,230,122,0.03) 0%, transparent 60%),
+              radial-gradient(ellipse 50% 50% at 75% 65%, rgba(255,140,66,0.02) 0%, transparent 55%);
+}
+.bg-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 30%, transparent 70%);
+}
+.bg-scanline {
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 6px);
+}
+
+/* ── Nav ── */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 40px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: border-color var(--transition-smooth);
+}
+.nav.scrolled { border-bottom-color: var(--border); background: rgba(8,8,14,0.85); }
+.nav-logo {
+  font-family: var(--font-mono); font-size: 18px; font-weight: 600;
+  color: var(--text-primary); letter-spacing: 2px; text-decoration: none;
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-logo-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 10px var(--accent-green), 0 0 28px rgba(0,230,122,0.4);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.3); }
+}
+.nav-cta {
+  font-family: var(--font-body); font-size: 14px; font-weight: 500;
+  color: var(--bg-deep); background: var(--accent-green);
+  padding: 10px 22px; border-radius: 24px; text-decoration: none;
+  transition: all var(--transition-fast);
+}
+.nav-cta:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
+/* ── Page wrapper ── */
+.page { position: relative; z-index: 1; }
+
+/* ── Hero ── */
+.hero {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 120px 24px 80px; text-align: center;
+}
+
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 1.5px;
+  color: var(--accent-green); text-transform: uppercase;
+  padding: 6px 16px; border-radius: 20px;
+  border: 1px solid rgba(0,230,122,0.2);
+  background: var(--accent-green-dim);
+  margin-bottom: 32px;
+  opacity: 0; animation: fadeUp 0.6s 0.1s ease-out forwards;
+}
+.hero-badge-status {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent-green);
+  box-shadow: 0 0 6px var(--accent-green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+.hero-title {
+  font-family: var(--font-display); font-size: clamp(44px, 7vw, 80px);
+  font-weight: 700; letter-spacing: -0.02em; line-height: 1.08;
+  max-width: 720px; color: var(--text-primary);
+  opacity: 0; animation: fadeUp 0.7s 0.2s ease-out forwards;
+}
+.hero-title span {
+  color: var(--accent-green);
+}
+
+.hero-sub {
+  font-size: clamp(16px, 2.2vw, 19px); color: var(--text-secondary);
+  max-width: 520px; line-height: 1.6; margin-top: 20px;
+  opacity: 0; animation: fadeUp 0.7s 0.3s ease-out forwards;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Chat Demo Block ── */
+.chat-demo {
+  width: 100%; max-width: 680px; margin-top: 48px;
+  opacity: 0; animation: fadeUp 0.8s 0.4s ease-out forwards;
+}
+
+.chat-messages {
+  display: flex; flex-direction: column; gap: 16px;
+  margin-bottom: 16px;
+  min-height: 40px;
+}
+
+.chat-msg {
+  text-align: left; padding: 14px 18px; border-radius: var(--radius-md);
+  font-size: 14px; line-height: 1.6;
+  animation: msgIn 0.35s ease-out;
+}
+.chat-msg.user {
+  align-self: flex-end; max-width: 75%;
+  background: var(--bg-card); color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.agent {
+  align-self: flex-start; max-width: 82%;
+  background: transparent; color: var(--text-secondary);
+  border: 1px solid transparent;
+  font-family: var(--font-mono); font-size: 13px;
+  padding-left: 0;
+}
+.chat-msg.agent::before {
+  content: ''; display: inline-block; width: 8px; height: 8px;
+  border-radius: 2px; background: var(--accent-green);
+  margin-right: 12px; vertical-align: middle;
+  box-shadow: 0 0 6px rgba(0,230,122,0.5);
+}
+.chat-msg.agent.thinking::before {
+  animation: think-pulse 0.6s ease-in-out infinite;
+}
+@keyframes think-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Input Wrapper ── */
+.input-wrapper {
+  position: relative; display: flex; align-items: center;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 5px;
+  transition: all var(--transition-smooth);
+  box-shadow: 0 0 0 0 rgba(0,230,122,0);
+}
+.input-wrapper:focus-within {
+  border-color: var(--border-active);
+  box-shadow: 0 0 0 4px rgba(0,230,122,0.06), 0 0 28px rgba(0,230,122,0.08);
+}
+
+.input-glow {
+  position: absolute; inset: -1px; border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(0,230,122,0.5), transparent 40%, transparent 60%, rgba(255,140,66,0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none; opacity: 0.6;
+  transition: opacity var(--transition-smooth);
+}
+.input-wrapper:focus-within .input-glow { opacity: 1; }
+
+.chat-input {
+  flex: 1; background: transparent; border: none; outline: none;
+  padding: 16px 20px; font-family: var(--font-mono); font-size: 15px;
+  color: var(--text-primary); letter-spacing: 0.01em;
+}
+.chat-input::placeholder { color: var(--text-muted); font-family: var(--font-mono); }
+
+.send-btn {
+  width: 44px; height: 44px; border: none; border-radius: 14px;
+  background: var(--accent-green); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all var(--transition-fast); flex-shrink: 0;
+  margin-right: 4px;
+}
+.send-btn:hover { filter: brightness(1.2); transform: scale(1.04); }
+.send-btn:active { transform: scale(0.95); }
+.send-btn:disabled { background: var(--border); cursor: not-allowed; filter: none; transform: none; }
+.send-btn svg { width: 18px; height: 18px; stroke: var(--bg-deep); stroke-width: 2.5; fill: none; }
+
+/* ── Suggested prompts ── */
+.prompts-row {
+  display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
+  margin-top: 22px;
+  opacity: 0; animation: fadeUp 0.8s 0.55s ease-out forwards;
+}
+.prompt-chip {
+  font-family: var(--font-mono); font-size: 13px; color: var(--text-secondary);
+  padding: 8px 16px; border-radius: 20px;
+  border: 1px solid var(--border); background: var(--bg-surface);
+  cursor: pointer; transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.prompt-chip:hover {
+  color: var(--accent-green); border-color: rgba(0,230,122,0.4);
+  background: var(--accent-green-dim);
+  transform: translateY(-2px);
+}
+
+/* ── Features ── */
+.features {
+  max-width: 1100px; margin: 0 auto; padding: 40px 24px 100px;
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+}
+.feature-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: 32px 24px;
+  transition: all var(--transition-smooth);
+  position: relative; overflow: hidden;
+}
+.feature-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  opacity: 0; transition: opacity var(--transition-smooth);
+}
+.feature-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-4px); }
+.feature-card:hover::before { opacity: 1; }
+
+.feature-icon {
+  font-size: 28px; margin-bottom: 16px; display: block;
+  width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-green-dim);
+}
+.feature-card h3 {
+  font-family: var(--font-display); font-size: 18px; font-weight: 600;
+  margin-bottom: 8px; color: var(--text-primary);
+}
+.feature-card p {
+  font-size: 14px; color: var(--text-secondary); line-height: 1.6;
+}
+
+/* ── Footer ── */
+.footer {
+  text-align: center; padding: 40px 24px;
+  border-top: 1px solid var(--border);
+  color: var(--text-muted); font-size: 13px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .nav { padding: 16px 20px; }
+  .features { grid-template-columns: 1fr 1fr; }
+  .chat-demo { max-width: 100%; }
+  .chat-msg.user { max-width: 88%; }
+  .chat-msg.agent { max-width: 92%; }
+}
+@media (max-width: 480px) {
+  .hero { padding: 100px 16px 60px; }
+  .hero-title { font-size: 36px; }
+  .features { grid-template-columns: 1fr; }
+  .prompts-row { gap: 8px; }
+  .prompt-chip { font-size: 12px; padding: 7px 12px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-layer">
+  <div class="bg-vignette"></div>
+  <div class="bg-grid"></div>
+  <div class="bg-scanline"></div>
+</div>
+
+<!-- Nav -->
+<nav class="nav" id="nav">
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-dot"></span>ORBIT
+  </a>
+  <a href="#chat" class="nav-cta">开始使用</a>
+</nav>
+
+<!-- Page -->
+<div class="page">
+
+  <!-- Hero -->
+  <section class="hero" id="chat">
+    <div class="hero-badge">
+      <span class="hero-badge-status"></span>Agent 已就绪
+    </div>
+
+    <h1 class="hero-title">
+      说一句话，<br><span>剩下的交给我们</span>
+    </h1>
+
+    <p class="hero-sub">
+      ORBIT 是新一代 AI Agent 平台。输入你的目标，代理自主规划路径、调度工具、交付成果 — 不是聊天，是执行。
+    </p>
+
+    <!-- Chat demo -->
+    <div class="chat-demo">
+      <div class="chat-messages" id="chatMessages"></div>
+
+      <div class="input-wrapper" id="inputWrapper">
+        <div class="input-glow"></div>
+        <input
+          type="text"
+          class="chat-input"
+          id="chatInput"
+          placeholder="输入你的目标，例如：帮我分析上周的销售数据..."
+          autocomplete="off"
+        >
+        <button class="send-btn" id="sendBtn" disabled aria-label="发送">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+
+      <div class="prompts-row">
+        <button class="prompt-chip" data-prompt="帮我分析最新的销售数据并生成可视化报告">📊 分析销售数据</button>
+        <button class="prompt-chip" data-prompt="自动回复这一周积压的客户邮件">✉️ 回复客户邮件</button>
+        <button class="prompt-chip" data-prompt="监控竞品价格变动并在降价时通知我">🔍 监控竞品价格</button>
+        <button class="prompt-chip" data-prompt="生成本季度的项目进度报告并发送给团队">📋 生成项目报告</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="feature-card">
+      <div class="feature-icon">🧠</div>
+      <h3>自主规划</h3>
+      <p>Agent 自动将复杂目标拆解为可执行步骤，选择最优路径，无需手动编排。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <h3>并行执行</h3>
+      <p>多个子任务同时进行，浏览器标签、API 调用、文件处理各司其职。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔗</div>
+      <h3>工具生态</h3>
+      <p>连接你的日历、邮箱、数据库、Slack — Agent 在真实应用间自由穿梭。</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>安全可控</h3>
+      <p>每一步操作都可审查、可中断、可回滚。你始终掌握最高权限。</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>ORBIT &copy; 2026 — Built for builders</p>
+  </footer>
+</div>
+
+<script>
+// ── DOM refs ──
+const input = document.getElementById('chatInput');
+const sendBtn = document.getElementById('sendBtn');
+const messages = document.getElementById('chatMessages');
+const chips = document.querySelectorAll('.prompt-chip');
+const nav = document.getElementById('nav');
+
+// ── Send button state ──
+function updateSendBtn() {
+  sendBtn.disabled = input.value.trim().length === 0;
+}
+input.addEventListener('input', updateSendBtn);
+
+// ── Agent response generator ──
+const responses = [
+  '好的，我来拆解这个任务。\n\n1. 首先拉取数据源\n2. 清洗并分析关键指标\n3. 生成可视化报告\n4. 推送给你确认\n\n开始执行 — 预计 45 秒完成。',
+  '收到。这个任务需要调用以下工具：\n\n• 邮件 API (Gmail)\n• CRM 查询接口\n• 自然语言摘要模型\n\n正在为您处理积压邮件，我会优先处理高优先级的。',
+  '明白。我已启动竞品监控 Agent：\n\n▸ 数据源：京东 / 天猫 / 拼多多\n▸ 频率：每小时轮询\n▸ 告警阈值：降价 > 5%\n▸ 通知渠道：企业微信\n\n设置完毕。当检测到变动会立即通知你。',
+  '收到。正在生成 Q2 项目进度报告：\n\n1. 从 Linear/Jira 拉取任务数据 ✓\n2. 汇总各团队完成情况 ✓\n3. 生成 PDF 并发送团队 ✓\n\n报告已生成，预览链接稍后推送。',
+];
+let responseIdx = 0;
+
+// ── Send message ──
+function sendMessage(text) {
+  if (!text.trim()) return;
+
+  // User message
+  const userMsg = document.createElement('div');
+  userMsg.className = 'chat-msg user';
+  userMsg.textContent = text;
+  messages.appendChild(userMsg);
+
+  // Scroll
+  messages.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+  // Thinking indicator
+  const thinkingMsg = document.createElement('div');
+  thinkingMsg.className = 'chat-msg agent thinking';
+  thinkingMsg.textContent = 'Agent 思考中...';
+  messages.appendChild(thinkingMsg);
+  messages.scrollIntoView({ behavior: 'smooth', block: 'end' });
+
+  // Simulate agent response
+  const response = responses[responseIdx % responses.length];
+  responseIdx++;
+
+  setTimeout(() => {
+    thinkingMsg.remove();
+
+    const agentMsg = document.createElement('div');
+    agentMsg.className = 'chat-msg agent';
+    agentMsg.textContent = response;
+    messages.appendChild(agentMsg);
+    messages.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, 1200 + Math.random() * 800);
+}
+
+// ── Event listeners ──
+sendBtn.addEventListener('click', () => {
+  const text = input.value.trim();
+  if (!text) return;
+  sendMessage(text);
+  input.value = '';
+  updateSendBtn();
+  input.focus();
+});
+
+input.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && input.value.trim()) {
+    e.preventDefault();
+    sendMessage(input.value.trim());
+    input.value = '';
+    updateSendBtn();
+  }
+});
+
+// ── Prompt chips ──
+chips.forEach(chip => {
+  chip.addEventListener('click', () => {
+    const prompt = chip.dataset.prompt;
+    input.value = prompt;
+    updateSendBtn();
+    input.focus();
+    sendMessage(prompt);
+    input.value = '';
+    updateSendBtn();
+  });
+});
+
+// ── Nav scroll effect ──
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 30);
+});
+</script>
+
+</body>
+</html>

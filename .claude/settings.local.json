@@ -5,10 +5,20 @@
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Temp\\\\check-size2.ps1\")",
       "Bash(powershell -ExecutionPolicy Bypass -File \"D:\\\\Temp\\\\check-size3.ps1\")",
       "Bash(powershell -Command \"Get-PSDrive D | Format-List Used,Free\")",
-      "Bash(rm -rf \"C:/Users/admin/AppData/Local/MathWorks\" && echo \"Done\")"
+      "Bash(rm -rf \"C:/Users/admin/AppData/Local/MathWorks\" && echo \"Done\")",
+      "Bash(cd \"c:\\Users\\admin\\Desktop\\gmini\" && git add index.html && git commit -m *)",
+      "Bash(cd \"c:\\Users\\admin\\Desktop\\gmini\" && git push)"
     ],
     "additionalDirectories": [
       "C:\\Users\\admin\\AppData\\Local\\MathWorks"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "(Edit|Write).*index\\.html",
+        "command": "cd \"c:\\Users\\admin\\Desktop\\gmini\" && git add index.html && git commit -m \"auto: deploy landing page\" && git push"
+      }
     ]
   }
 }
